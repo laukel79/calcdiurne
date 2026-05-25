@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator Diurne Olanda</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --green: #22c55e;
+    --blue: #38bdf8;
+    --card-bg: #141e2e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .flag {
+    font-size: 40px;
+    margin-bottom: 16px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .author {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .author span { color: var(--accent); }
+
+  /* Card */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Form rows */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .field input[type="datetime-local"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: dark;
+  }
+
+  .field input[type="datetime-local"]:focus {
+    border-color: var(--accent);
+  }
+
+  /* Toggle weekend */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+  }
+
+  .toggle-row:hover { border-color: var(--accent); }
+
+  .toggle-row input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .toggle-label {
+    font-size: 14px;
+    color: var(--text2);
+    flex: 1;
+  }
+
+  .days-input {
+    display: none;
+    margin-top: 12px;
+  }
+
+  .days-input.show { display: block; }
+
+  .days-input input[type="number"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .days-input input:focus { border-color: var(--accent); }
+
+  /* Button */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:hover {
+    background: var(--accent2);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(249,115,22,0.3);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  /* Results */
+  .results {
+    display: none;
+    animation: slideUp 0.4s ease;
+  }
+
+  .results.show { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Total box */
+  .total-box {
+    background: linear-gradient(135deg, #1a1000, #1f1500);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .total-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(249,115,22,0.08), transparent 60%);
+    pointer-events: none;
+  }
+
+  .total-label {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .total-amount {
+    font-size: clamp(40px, 8vw, 56px);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .total-note {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Day breakdown */
+  .breakdown-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .day-header:hover { background: var(--surface2); }
+
+  .day-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .day-type {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .day-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .chevron {
+    color: var(--text3);
+    font-size: 12px;
+    margin-left: 10px;
+    transition: transform 0.2s;
+  }
+
+  .day-card.open .chevron { transform: rotate(180deg); }
+
+  .day-details {
+    display: none;
+    padding: 0 16px 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .day-card.open .day-details { display: block; }
+
+  .interval-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+  }
+
+  .interval-row:last-child { border-bottom: none; }
+
+  .interval-time {
+    font-family: 'DM Mono', monospace;
+    color: var(--blue);
+    font-size: 12px;
+  }
+
+  .interval-desc {
+    color: var(--text2);
+    font-size: 12px;
+    flex: 1;
+    padding: 0 12px;
+  }
+
+  .interval-amount {
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Weekend card */
+  .weekend-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .weekend-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .weekend-sub {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .weekend-amount {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Info box */
+  .info-box {
+    background: rgba(56,189,248,0.05);
+    border: 1px solid rgba(56,189,248,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.6;
+    margin-top: 16px;
+  }
+
+  .info-box strong { color: var(--blue); }
+
+  /* Reset btn */
+  .btn-reset {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--text3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+  }
+
+  .btn-reset:hover {
+    border-color: var(--text3);
+    color: var(--text);
+  }
+
+  /* Error */
+  .error-msg {
+    color: #f87171;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    padding: 12px;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    line-height: 2;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <span class="flag">🇳🇱</span>
+    <h1>Calculator <span>Diurne</span> Olanda</h1>
+    <div class="subtitle">CAO Beroepsgoederenvervoer 2026</div>
+    <div class="author">creat de <span>Laurențiu</span></div>
+  </header>
+
+  <!-- Input card -->
+  <div class="card">
+    <div class="card-title">// Date cursă</div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>▶ PLECARE</label>
+        <input type="datetime-local" id="departure" step="60">
+      </div>
+      <div class="field">
+        <label>■ SOSIRE</label>
+        <input type="datetime-local" id="arrival" step="60">
+      </div>
+    </div>
+
+    <label class="toggle-row" for="hasWeekend">
+      <input type="checkbox" id="hasWeekend">
+      <span class="toggle-label">🏖️ Am stat blocat în weekend / sărbătoare (art. 40 lid 5)</span>
+    </label>
+
+    <div class="days-input" id="daysInput">
+      <div class="field">
+        <label>NUMĂR ZILE BLOCATE</label>
+        <input type="number" id="weekendDays" min="1" max="14" value="1" placeholder="ex: 2">
+      </div>
+    </div>
+
+    <button class="btn" onclick="calculate()">⟶ Calculează diurna</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <div class="total-box">
+      <div class="total-label">Total diurnă netă</div>
+      <div class="total-amount" id="totalAmount">€0,00</div>
+      <div class="total-note">conform CAO art. 40 — valori nete 2026</div>
+    </div>
+
+    <div class="card">
+      <div class="breakdown-title">// Detaliu pe zile</div>
+      <div id="dayBreakdown"></div>
+      <div id="weekendBlock"></div>
+
+      <div class="info-box">
+        <strong>ℹ️ Ce acoperă diurna:</strong> mâncare, băuturi, toaletă.<br>
+        <strong>Nu acoperă:</strong> cazare, cabina camionului, telefon, taxe valutare.
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="reset()">↺ Calcul nou</button>
+  </div>
+
+  <footer>
+    Calculator Diurne Olanda · Creat de Laurențiu<br>
+    Bazat pe CAO Beroepsgoederenvervoer over de weg 2026<br>
+    Art. 40 — Vergoeding van verblijfkosten
+  </footer>
+
+</div>
+
+<script>
+  // Toggle weekend input
+  document.getElementById('hasWeekend').addEventListener('change', function() {
+    document.getElementById('daysInput').classList.toggle('show', this.checked);
+  });
+
+  // Toggle day details
+  function toggleDay(el) {
+    el.closest('.day-card').classList.toggle('open');
+  }
+
+  const DAYS_RO = ['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+  const MONTHS_RO = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+
+  function fmt(d) {
+    return `${d.getDate()} ${MONTHS_RO[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function fmtTime(d) {
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function fmtEur(val) {
+    return '€' + val.toFixed(2).replace('.',',');
+  }
+
+  // Calculate minutes between two times on same day (as minutes from midnight)
+  function minutesInRange(startMin, endMin, rangeStart, rangeEnd) {
+    const s = Math.max(startMin, rangeStart);
+    const e = Math.min(endMin, rangeEnd);
+    return Math.max(0, e - s);
+  }
+
+  // Rates per minute
+  const R_LOW = 0.83 / 60;   // €0.83/h
+  const R_HIGH = 3.77 / 60;  // €3.77/h
+  const EXTRA_18 = 15.73;    // extra toeslag
+
+  // Calculate amount for a block: startMin..endMin (minutes from midnight of that day)
+  // dayType: 'first' | 'middle' | 'last'
+  // departureMin: minute of departure on first day
+  // Returns {amount, intervals[]}
+  function calcBlock(startMin, endMin, dayType, departureMin, arrivalMin) {
+    let amount = 0;
+    let intervals = [];
+
+    if (startMin >= endMin) return {amount, intervals};
+
+    if (dayType === 'middle') {
+      // Fixed: €65.04/day = 12h*1.65 + 12h*3.77
+      // But we show breakdown
+      // 00:00-12:00 low, 12:00-24:00 but actually formula: 12x1.65 + 12x3.77
+      // Per CAO: 1st day: 1.65/h + 3.77/h after 17:00 if departed before 17:00
+      // Middle: flat €65.04
+      // We'll show it as fixed
+      amount = 65.04;
+      intervals.push({
+        time: '00:00 – 24:00',
+        desc: 'Zi intermediară (fix CAO)',
+        amt: 65.04
+      });
+      return {amount, intervals};
+    }
+
+    // For first and last day, calculate per interval
+    // Intervals based on CAO art. 40:
+    // First day: 1.65/h all day, 3.77/h 17:00-24:00 if departed before 17:00
+    // Last day: 1.65/h 00:00-06:00, 1.65/h 06:00-18:00, 3.77/h 18:00-24:00
+
+    if (dayType === 'first') {
+      // 07:22 departure example
+      // Pay 1.65/h for all hours
+      // Pay 3.77/h for 17:00-24:00 if departed before 17:00
+      // Extra €15.73 if departed after 14:00 and away ≥12h (handled separately)
+
+      // 1.65/h for entire period
+      let mins = endMin - startMin;
+      if (mins > 0) {
+        let amt1 = (mins / 60) * 1.65;
+        amount += amt1;
+        intervals.push({
+          time: `${minsToTime(startMin)} – ${minsToTime(endMin)}`,
+          desc: `${(mins/60).toFixed(2)}h × €1,65/h`,
+          amt: amt1
+        });
+      }
+
+      // Extra 3.77-1.65=2.12 for 17:00-24:00 if departed before 17:00
+      if (departureMin < 17*60) {
+        let eveningMins = minutesInRange(startMin, endMin, 17*60, 24*60);
+        if (eveningMins > 0) {
+          let amt2 = (eveningMins / 60) * (3.77 - 1.65); // extra on top
+          amount += amt2;
+          intervals.push({
+            time: `${minsToTime(Math.max(startMin,17*60))} – ${minsToTime(Math.min(endMin,24*60))}`,
+            desc: `Toeslag seară +€2,12/h (total €3,77/h)`,
+            amt: amt2
+          });
+        }
+      }
+
+      // Extra €15.73 if departed after 14:00 and trip ≥ 12h (multi-day counts as ≥12h)
+      if (departureMin >= 14*60) {
+        // This is multi-day so ≥12h is guaranteed
+        amount += EXTRA_18;
+        intervals.push({
+          time: '—',
+          desc: 'Extra toeslag plecare după 14:00 (≥12h)',
+          amt: EXTRA_18
+        });
+      }
+
+    } else if (dayType === 'last') {
+      // 00:00-06:00: 1.65/h
+      let n1 = minutesInRange(startMin, endMin, 0, 6*60);
+      if (n1 > 0) {
+        let a = (n1/60)*1.65;
+        amount += a;
+        intervals.push({ time: `${minsToTime(startMin)} – ${minsToTime(Math.min(endMin,6*60))}`, desc: `${(n1/60).toFixed(2)}h × €1,65/h (noapte)`, amt: a });
+      }
+
+      // 06:00-18:00: 1.65/h
+      let n2 = minutesInRange(startMin, endMin, 6*60, 18*60);
+      if (n2 > 0) {
+        let a = (n2/60)*1.65;
+        amount += a;
+        intervals.push({ time: `${minsToTime(Math.max(startMin,6*60))} – ${minsToTime(Math.min(endMin,18*60))}`, desc: `${(n2/60).toFixed(2)}h × €1,65/h (zi)`, amt: a });
+      }
+
+      // 18:00-24:00: 3.77/h
+      let n3 = minutesInRange(startMin, endMin, 18*60, 24*60);
+      if (n3 > 0) {
+        let a = (n3/60)*3.77;
+        amount += a;
+        intervals.push({ time: `${minsToTime(Math.max(startMin,18*60))} – ${minsToTime(Math.min(endMin,24*60))}`, desc: `${(n3/60).toFixed(2)}h × €3,77/h (seară)`, amt: a });
+      }
+    }
+
+    return {amount, intervals};
+  }
+
+  function minsToTime(m) {
+    let h = Math.floor(m/60);
+    let min = m%60;
+    if (h >= 24) h = 24, min = 0;
+    return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+  }
+
+  function calculate() {
+    const depInput = document.getElementById('departure').value;
+    const arrInput = document.getElementById('arrival').value;
+    const errorEl = document.getElementById('errorMsg');
+
+    errorEl.classList.remove('show');
+
+    if (!depInput || !arrInput) {
+      errorEl.textContent = 'Te rog completează ambele date și ore.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const dep = new Date(depInput);
+    const arr = new Date(arrInput);
+
+    if (arr <= dep) {
+      errorEl.textContent = 'Data sosirii trebuie să fie după data plecării.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    // Check minimum 4h away
+    const totalMins = (arr - dep) / 60000;
+    if (totalMins < 240) {
+      errorEl.textContent = 'Sub 4 ore departe de bază — nu se acordă diurnă.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    // Build days
+    let days = [];
+    let current = new Date(dep);
+    current.setHours(0,0,0,0);
+    let end = new Date(arr);
+    end.setHours(0,0,0,0);
+
+    while (current <= end) {
+      days.push(new Date(current));
+      current.setDate(current.getDate()+1);
+    }
+
+    const depMins = dep.getHours()*60 + dep.getMinutes();
+    const arrMins = arr.getHours()*60 + arr.getMinutes();
+
+    let totalAmount = 0;
+    let html = '';
+
+    days.forEach((day, idx) => {
+      const isFirst = idx === 0;
+      const isLast = idx === days.length - 1;
+      const isSingle = days.length === 1;
+
+      let startMin = isFirst ? depMins : 0;
+      let endMin = isLast ? arrMins : 24*60;
+
+      let dayType;
+      if (isSingle) dayType = 'first'; // treat single day separately
+      else if (isFirst) dayType = 'first';
+      else if (isLast) dayType = 'last';
+      else dayType = 'middle';
+
+      // For single day: different rules
+      let result;
+      if (isSingle) {
+        // Single day rules
+        let intervals = [];
+        let amt = 0;
+        let durationMins = arrMins - depMins;
+
+        if (durationMins >= 240) {
+          // Pay 0.83/h for entire duration
+          let a = (durationMins/60)*0.83;
+          amt += a;
+          intervals.push({ time: `${minsToTime(depMins)} – ${minsToTime(arrMins)}`, desc: `${(durationMins/60).toFixed(2)}h × €0,83/h`, amt: a });
+
+          // 18:00-24:00 if departed before 14:00: 3.77/h
+          if (depMins < 14*60) {
+            let ev = minutesInRange(depMins, arrMins, 18*60, 24*60);
+            if (ev > 0) {
+              let a2 = (ev/60)*(3.77-0.83);
+              amt += a2;
+              intervals.push({ time: `${minsToTime(Math.max(depMins,18*60))} – ${minsToTime(Math.min(arrMins,24*60))}`, desc: `Toeslag seară +€2,94/h (total €3,77/h)`, amt: a2 });
+            }
+          }
+
+          // If departed after 14:00 and ≥12h away
+          if (depMins >= 14*60 && durationMins >= 720) {
+            amt += EXTRA_18;
+            intervals.push({ time: '—', desc: 'Extra toeslag (plecare după 14:00, ≥12h)', amt: EXTRA_18 });
+          }
+        }
+
+        result = {amount: amt, intervals};
+      } else {
+        result = calcBlock(startMin, endMin, dayType, depMins, arrMins);
+      }
+
+      totalAmount += result.amount;
+
+      const dayLabel = DAYS_RO[day.getDay()];
+      const dateStr = fmt(day);
+      let typeLabel = isFirst && !isSingle ? 'Prima zi' : isLast && !isSingle ? 'Ultima zi' : isSingle ? 'Cursă dus-întors' : 'Zi intermediară';
+
+      const intervalsHtml = result.intervals.map(iv => `
+        <div class="interval-row">
+          <span class="interval-time">${iv.time}</span>
+          <span class="interval-desc">${iv.desc}</span>
+          <span class="interval-amount">${fmtEur(iv.amt)}</span>
+        </div>
+      `).join('');
+
+      html += `
+        <div class="day-card" id="day-${idx}">
+          <div class="day-header" onclick="toggleDay(this)">
+            <div>
+              <div class="day-name">${dayLabel}, ${dateStr}</div>
+              <div class="day-type">${typeLabel}</div>
+            </div>
+            <div style="display:flex;align-items:center">
+              <span class="day-total">${fmtEur(result.amount)}</span>
+              <span class="chevron">▼</span>
+            </div>
+          </div>
+          <div class="day-details">
+            ${intervalsHtml || '<div class="interval-row"><span class="interval-desc" style="color:var(--text3)">Sub 4 ore — fără diurnă</span></div>'}
+          </div>
+        </div>
+      `;
+    });
+
+    // Weekend block
+    let weekendHtml = '';
+    const hasWeekend = document.getElementById('hasWeekend').checked;
+    if (hasWeekend) {
+      const wDays = parseInt(document.getElementById('weekendDays').value) || 1;
+      const wAmt = wDays * 15.73;
+      totalAmount += wAmt;
+      weekendHtml = `
+        <div class="weekend-card">
+          <div>
+            <div class="weekend-label">🏖️ Weekend / sărbătoare blocat</div>
+            <div class="weekend-sub">${wDays} zi/zile × €15,73 net (art. 40 lid 5)</div>
+          </div>
+          <div class="weekend-amount">${fmtEur(wAmt)}</div>
+        </div>
+      `;
+    }
+
+    document.getElementById('dayBreakdown').innerHTML = html;
+    document.getElementById('weekendBlock').innerHTML = weekendHtml;
+    document.getElementById('totalAmount').textContent = fmtEur(totalAmount);
+    document.getElementById('results').classList.add('show');
+
+    // Scroll to results
+    setTimeout(() => {
+      document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+
+  function reset() {
+    document.getElementById('departure').value = '';
+    document.getElementById('arrival').value = '';
+    document.getElementById('hasWeekend').checked = false;
+    document.getElementById('daysInput').classList.remove('show');
+    document.getElementById('weekendDays').value = 1;
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('errorMsg').classList.remove('show');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+</script>
+</body>
+</html>
